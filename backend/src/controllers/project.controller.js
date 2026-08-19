@@ -22,13 +22,14 @@ export const createProject = async (req, res) => {
 
 export const getProjects = async (req, res) => {
   try {
-    const project = await prisma.project.findMany({
+    const projects = await prisma.project.findMany({
       orderBy: {
         createdAt: "desc",
       },
     });
     res.status(200).json({
-      project,
+      message: "Projects found successfully",
+      projects,
     });
   } catch (error) {
     console.error("Get project error:", error);
@@ -37,17 +38,24 @@ export const getProjects = async (req, res) => {
 };
 
 export const getProject = async (req, res) => {
-  const { id } = req.params;
+  const projectId = Number(req.params.id);
+
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return res.status(400).json({
+      message: "Invalid project ID",
+    });
+  }
   try {
     const project = await prisma.project.findUnique({
       where: {
-        id: Number(id), //converting the string id to number since the db project model expects integer.
+        id: projectId,
       },
     });
 
     if (!project) return res.status(404).json({ message: "Project not found" });
 
     res.status(200).json({
+      message: "Projects found successfully",
       project,
     });
   } catch (error) {
@@ -57,14 +65,19 @@ export const getProject = async (req, res) => {
 };
 
 export const updateProject = async (req, res) => {
-  const { id } = req.params;
-
+  const projectId = Number(req.params.id);
   const { name, description } = req.body;
+
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return res.status(400).json({
+      message: "Invalid project ID",
+    });
+  }
 
   try {
     const project = await prisma.project.findUnique({
       where: {
-        id: Number(id),
+        id: projectId,
       },
     });
 
@@ -76,7 +89,7 @@ export const updateProject = async (req, res) => {
 
     const updatedProject = await prisma.project.update({
       where: {
-        id: Number(id),
+        id: projectId,
       },
       data: {
         name,
@@ -98,12 +111,17 @@ export const updateProject = async (req, res) => {
 };
 
 export const deleteProject = async (req, res) => {
-  const { id } = req.params;
+  const projectId = Number(req.params.id);
 
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return res.status(400).json({
+      message: "Invalid project ID",
+    });
+  }
   try {
     const project = await prisma.project.findUnique({
       where: {
-        id: Number(id),
+        id: projectId,
       },
     });
 
@@ -115,7 +133,7 @@ export const deleteProject = async (req, res) => {
 
     const deletedProject = await prisma.project.delete({
       where: {
-        id: Number(id),
+        id: projectId,
       },
     });
 
