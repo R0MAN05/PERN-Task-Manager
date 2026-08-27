@@ -1,13 +1,25 @@
 import express from "express";
-import { createTask, getProjectTasks, getTask, updateTask, deleteTask} from "../controllers/task.controller.js";
+import {
+  createTask,
+  getProjectTasks,
+  getTask,
+  updateTask,
+  deleteTask,
+} from "../controllers/task.controller.js";
+
+import { validate } from "../middleware/validate.js";
+import { createTaskSchema, updateTaskSchema } from "../validations/task.validation.js";
+import { validateId } from "../middleware/validateId.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
+
 
 const router = express.Router();
 
-router.post("/projects/:projectId/tasks", createTask);
-router.get("/projects/:projectId/tasks", getProjectTasks);
+router.post("/projects/:projectId/tasks", validateId("projectId", "project"), validate(createTaskSchema), asyncHandler(createTask));
+router.get("/projects/:projectId/tasks", validateId("projectId", "project"), asyncHandler(getProjectTasks));
 
-router.get("/tasks/:id", getTask);
-router.patch("/tasks/:id", updateTask);
-router.delete("/tasks/:id", deleteTask);
+router.get("/tasks/:id", validateId("id", "task"), asyncHandler(getTask));
+router.patch("/tasks/:id", validateId("id", "task"), validate(updateTaskSchema), asyncHandler(updateTask));
+router.delete("/tasks/:id", validateId("id", "task"), asyncHandler(deleteTask));
 
 export default router;
