@@ -1,8 +1,15 @@
 import prisma from "../utils/prisma.js";
 
 export const createProject = async (req, res) => {
+  const { name, description } = req.body;
+  const userId = req.user.userId;
+
   const project = await prisma.project.create({
-    data: req.body,
+    data: {
+      name,
+      description,
+      userId
+    }
   });
 
   res.status(201).json({
@@ -12,7 +19,12 @@ export const createProject = async (req, res) => {
 };
 
 export const getProjects = async (req, res) => {
+
+  const userId = req.user.userId;
   const projects = await prisma.project.findMany({
+    where: {
+      userId,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -26,10 +38,12 @@ export const getProjects = async (req, res) => {
 
 export const getProject = async (req, res) => {
   const projectId = req.params.id;
+  const userId = req.user.userId;
 
-  const project = await prisma.project.findUnique({
+  const project = await prisma.project.findFirst({
     where: {
       id: projectId,
+      userId,
     },
   });
 
@@ -47,10 +61,12 @@ export const getProject = async (req, res) => {
 
 export const updateProject = async (req, res) => {
   const projectId = req.params.id;
+  const userId = req.user.userId;
 
-  const project = await prisma.project.findUnique({
+  const project = await prisma.project.findFirst({
     where: {
       id: projectId,
+      userId,
     },
   });
 
@@ -75,10 +91,12 @@ export const updateProject = async (req, res) => {
 
 export const deleteProject = async (req, res) => {
   const projectId = req.params.id;
+  const userId = req.user.userId;
 
-  const project = await prisma.project.findUnique({
+  const project = await prisma.project.findFirst({
     where: {
       id: projectId,
+      userId,
     },
   });
 
