@@ -34,14 +34,6 @@ router.get(
   asyncHandler(getProjects)
 );
 
-// router.get(
-//   "/",
-//   (req, res) =>{
-//  res.json(req);
-//   }
-// );
-
-
 router.get(
   "/:id",
   validateId("id", "project"),

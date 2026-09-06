@@ -10,9 +10,17 @@ import {
 import {
   register,
   login,
+  getMe
 } from "../controllers/auth.controller.js";
+import { authenticate } from "../middleware/authenticate.js";
 
 const router = express.Router();
+
+router.get(
+  "/me",
+  authenticate,
+  asyncHandler(getMe)
+);
 
 router.post(
   "/register",
