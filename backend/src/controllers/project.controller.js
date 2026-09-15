@@ -4,12 +4,22 @@ export const createProject = async (req, res) => {
   const { name, description } = req.body;
   const userId = req.user.userId;
 
-  const project = await prisma.project.create({
-    data: {
-      name,
-      description,
-      userId
-    }
+  const project = await prisma.$transaction(async (tx) => {
+    const newProject = await tx.project.create({
+      data: {
+        name,
+        description,
+      },
+    });
+
+    await tx.projectMember.create({
+      data: { 
+        projectId: newProject.id,
+        userId,
+      },
+    });
+
+    return newProject;
   });
 
   res.status(201).json({
@@ -19,19 +29,19 @@ export const createProject = async (req, res) => {
 };
 
 export const getProjects = async (req, res) => {
-
   const userId = req.user.userId;
+
   const projects = await prisma.project.findMany({
     where: {
-      userId,
-    },
-    orderBy: {
-      createdAt: "desc",
+      members: {
+        some: {
+          userId,
+        },
+      },
     },
   });
 
   res.status(200).json({
-    message: "Projects found successfully",
     projects,
   });
 };
@@ -43,7 +53,11 @@ export const getProject = async (req, res) => {
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      userId,
+      members: {
+        some: {
+          userId,
+        },
+      },
     },
   });
 
@@ -52,7 +66,7 @@ export const getProject = async (req, res) => {
       message: "Project not found",
     });
   }
-
+  
   res.status(200).json({
     message: "Project found successfully",
     project,
@@ -66,7 +80,11 @@ export const updateProject = async (req, res) => {
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      userId,
+      members: {
+        some: {
+          userId,
+        },
+      },
     },
   });
 
@@ -96,9 +114,14 @@ export const deleteProject = async (req, res) => {
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      userId,
+      members: {
+        some: {
+          userId,
+        },
+      },
     },
   });
+
 
   if (!project) {
     return res.status(404).json({

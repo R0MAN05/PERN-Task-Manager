@@ -89,6 +89,7 @@ export const getMe = async (req, res) => {
       name: true,
       email: true,
       createdAt: true,
+      role: true
     },
   });
 
@@ -96,5 +97,11 @@ export const getMe = async (req, res) => {
 
   res.status(200).json({
     user,
+  });
+};
+
+export const adminTest = async (req, res) => {
+  res.status(200).json({
+    message: "You have admin access",
   });
 };
