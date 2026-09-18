@@ -8,6 +8,8 @@ import {
   deleteProject,
 } from "../controllers/project.controller.js";
 
+import { addProjectMember, getProjectMembers, removeProjectMember } from "../controllers/projectMember.controller.js";
+
 import { validate } from "../middleware/validate.js";
 import {
   createProjectSchema,
@@ -17,40 +19,51 @@ import {
 import { validateId } from "../middleware/validateId.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
-
+import { authorize } from "../middleware/authorize.js";
+import { addProjectMemberSchema } from "../validations/projectMember.validation.js";
 
 const router = express.Router();
 
 router.use(authenticate);
 
-router.post(
-  "/",
-  validate(createProjectSchema),
-  asyncHandler(createProject)
-);
+router.post("/", validate(createProjectSchema), asyncHandler(createProject));
 
-router.get(
-  "/",
-  asyncHandler(getProjects)
-);
+router.get("/", asyncHandler(getProjects));
 
-router.get(
-  "/:id",
-  validateId("id", "project"),
-  asyncHandler(getProject)
-);
+router.get("/:id", validateId("id", "project"), asyncHandler(getProject));
 
 router.patch(
   "/:id",
   validateId("id", "project"),
   validate(updateProjectSchema),
-  asyncHandler(updateProject)
+  asyncHandler(updateProject),
+);
+
+router.delete("/:id", validateId("id", "project"), asyncHandler(deleteProject));
+
+//ProjectMember related routes:
+
+router.post(
+  "/:projectId/members",
+  validateId("projectId", "project"),
+  authorize("SUPER_ADMIN", "ADMIN"),
+  validate(addProjectMemberSchema),
+  asyncHandler(addProjectMember),
+);
+
+router.get(
+  "/:projectId/members",
+  validateId("projectId", "project"),
+  authorize("SUPER_ADMIN", "ADMIN", "EMPLOYEE", "INTERN"),
+  asyncHandler(getProjectMembers),
 );
 
 router.delete(
-  "/:id",
-  validateId("id", "project"),
-  asyncHandler(deleteProject)
+  "/:projectId/members/:userId",
+  validateId("projectId", "project"),
+  validateId("userId", "user"),
+  authorize("SUPER_ADMIN", "ADMIN"),
+  asyncHandler(removeProjectMember),
 );
 
 export default router;
