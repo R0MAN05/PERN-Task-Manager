@@ -18,6 +18,7 @@ import { authenticate } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
+
 router.use(authenticate);
 
 router.post(
@@ -26,6 +27,7 @@ router.post(
   validate(createTaskSchema),
   asyncHandler(createTask),
 );
+
 router.get(
   "/projects/:projectId/tasks",
   validateId("projectId", "project"),
@@ -33,12 +35,14 @@ router.get(
 );
 
 router.get("/tasks/:id", validateId("id", "task"), asyncHandler(getTask));
+
 router.patch(
   "/tasks/:id",
   validateId("id", "task"),
   validate(updateTaskSchema),
   asyncHandler(updateTask),
 );
+
 router.delete("/tasks/:id", validateId("id", "task"), asyncHandler(deleteTask));
 
 export default router;

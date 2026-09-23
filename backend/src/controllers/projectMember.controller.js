@@ -153,6 +153,23 @@ export const removeProjectMember = async (req, res) => {
     });
   }
 
+  // ADMIN can only remove EMPLOYEE or INTERN not superadmin
+  const requester = await prisma.user.findUnique({
+    where: {
+      id: req.user.userId,
+    },
+  });
+
+  if (
+    requester.role === "ADMIN" &&
+    user.role !== "EMPLOYEE" &&
+    user.role !== "INTERN"
+  ) {
+    return res.status(403).json({
+      message: "Admins can only remove employees or interns",
+    });
+  }
+
   const existingMember = await prisma.projectMember.findUnique({
     where: {
       projectId_userId: {
