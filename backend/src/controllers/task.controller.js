@@ -2,33 +2,8 @@ import prisma from "../utils/prisma.js";
 
 export const createTask = async (req, res) => {
   const projectId = req.params.projectId;
-  const userId = req.user.userId;
 
-  // Make sure the member belongs to the project
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      //used a compound key to get the member inside the project uisng the userId
-      projectId_userId: {
-        projectId,
-        userId,
-      },
-    },
-    include: {
-      user: {
-        select: {
-          role: true,
-        },
-      },
-    },
-  });
-
-  if (!member) {
-    return res.status(404).json({
-      message: "User is not a member of this project",
-    });
-  }
-
-  if (member.user.role === "INTERN") {
+  if (req.member.role === "INTERN") {
     return res.status(403).json({
       message: "Interns are not allowed to create tasks",
     });
@@ -52,23 +27,6 @@ export const createTask = async (req, res) => {
 
 export const getProjectTasks = async (req, res) => {
   const projectId = req.params.projectId;
-  const userId = req.user.userId;
-
-  // Verify the user is the member of the project
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      projectId_userId: {
-        projectId,
-        userId,
-      },
-    },
-  });
-
-  if (!member) {
-    return res.status(404).json({
-      message: "User is not a member of this project",
-    });
-  }
 
   const tasks = await prisma.task.findMany({
     where: {

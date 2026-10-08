@@ -15,15 +15,16 @@ import {
 import { validateId } from "../middleware/validateId.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
+import { requireProjectMember } from "../middleware/requireProjectMember.js";
 
 const router = express.Router();
-
 
 router.use(authenticate);
 
 router.post(
   "/projects/:projectId/tasks",
   validateId("projectId", "project"),
+  requireProjectMember,
   validate(createTaskSchema),
   asyncHandler(createTask),
 );
@@ -31,6 +32,7 @@ router.post(
 router.get(
   "/projects/:projectId/tasks",
   validateId("projectId", "project"),
+  requireProjectMember,
   asyncHandler(getProjectTasks),
 );
 
