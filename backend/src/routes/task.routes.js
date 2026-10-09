@@ -16,6 +16,7 @@ import { validateId } from "../middleware/validateId.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireProjectMember } from "../middleware/requireProjectMember.js";
+import { requireTaskProjectMember } from "../middleware/requireTaskProjectMember.js";
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.use(authenticate);
 router.post(
   "/projects/:projectId/tasks",
   validateId("projectId", "project"),
-  requireProjectMember,
+  asyncHandler(requireProjectMember),
   validate(createTaskSchema),
   asyncHandler(createTask),
 );
@@ -32,19 +33,30 @@ router.post(
 router.get(
   "/projects/:projectId/tasks",
   validateId("projectId", "project"),
-  requireProjectMember,
+  asyncHandler(requireProjectMember),
   asyncHandler(getProjectTasks),
 );
 
-router.get("/tasks/:id", validateId("id", "task"), asyncHandler(getTask));
+router.get(
+  "/tasks/:id",
+  validateId("id", "task"),
+  asyncHandler(requireTaskProjectMember),
+  asyncHandler(getTask),
+);
 
 router.patch(
   "/tasks/:id",
   validateId("id", "task"),
+  asyncHandler(requireTaskProjectMember),
   validate(updateTaskSchema),
   asyncHandler(updateTask),
 );
 
-router.delete("/tasks/:id", validateId("id", "task"), asyncHandler(deleteTask));
+router.delete(
+  "/tasks/:id",
+  validateId("id", "task"),
+  asyncHandler(requireTaskProjectMember),
+  asyncHandler(deleteTask),
+);
 
 export default router;

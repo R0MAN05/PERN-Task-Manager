@@ -45,34 +45,10 @@ export const getProjectTasks = async (req, res) => {
 
 export const getTask = async (req, res) => {
   const taskId = req.params.id;
-  const userId = req.user.userId;
 
-  const task = await prisma.task.findFirst({
-    where: {
-      id: taskId,
-    },
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
   });
-
-  if (!task) {
-    return res.status(404).json({
-      message: "Task not found",
-    });
-  }
-  // Verify the user is the member of the project
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: task.projectId,
-        userId,
-      },
-    },
-  });
-
-  if (!member) {
-    return res.status(404).json({
-      message: "User is not a member of this project",
-    });
-  }
 
   res.status(200).json({
     message: "Task found successfully",
@@ -82,43 +58,10 @@ export const getTask = async (req, res) => {
 
 export const updateTask = async (req, res) => {
   const taskId = req.params.id;
-  const userId = req.user.userId;
 
-  const task = await prisma.task.findFirst({
-    where: {
-      id: taskId,
-    },
-  });
+  if (req.member.role === "INTERN") {
+    const allowedStatuses = ["IN_PROGRESS", "COMPLETED"];
 
-  if (!task) {
-    return res.status(404).json({
-      message: "Task not found",
-    });
-  }
-
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: task.projectId,
-        userId,
-      },
-    },
-    include: {
-      user: {
-        select: {
-          role: true,
-        },
-      },
-    },
-  });
-
-  if (!member) {
-    return res.status(404).json({
-      message: "User is not a member of this project",
-    });
-  }
-
-  if (member.user.role === "INTERN") {
     const hasUnauthorizedField = Object.keys(req.body).some(
       // Get the fields sent in req.body and check if any field is not "status"
       (field) => field !== "status",
@@ -126,11 +69,16 @@ export const updateTask = async (req, res) => {
 
     if (hasUnauthorizedField) {
       return res.status(403).json({
-        message: "Interns are not allowed to update the tasks",
+        message: "Interns can only update task status",
+      });
+    }
+
+    if (!allowedStatuses.includes(req.body.status)) {
+      return res.status(403).json({
+        message: "Interns can only set status to IN_PROGRESS or COMPLETED",
       });
     }
   }
-
   const updatedTask = await prisma.task.update({
     where: {
       id: taskId,
@@ -146,42 +94,8 @@ export const updateTask = async (req, res) => {
 
 export const deleteTask = async (req, res) => {
   const taskId = req.params.id;
-  const userId = req.user.userId;
 
-  const task = await prisma.task.findFirst({
-    where: {
-      id: taskId,
-    },
-  });
-
-  if (!task) {
-    return res.status(404).json({
-      message: "Task not found",
-    });
-  }
-
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: task.projectId,
-        userId,
-      },
-    },
-    include: {
-      user: {
-        select: {
-          role: true,
-        },
-      },
-    },
-  });
-
-  if (!member)
-    return res.status(404).json({
-      message: "User is not a member of this project",
-    });
-
-  if (member.user.role === "INTERN")
+  if (req.member.role === "INTERN")
     return res.status(403).json({
       message: "Interns are not allowed to delete tasks",
     });
