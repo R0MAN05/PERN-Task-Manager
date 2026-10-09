@@ -35,8 +35,9 @@ export const requireTaskProjectMember = async (req, res, next) => {
   });
 
   if (!member) {
-    return res.status(404).json({
-      message: "Project member not found",
+    return res.status(403).json({
+      message:
+        "Only project members are allowed to perform this operation.",
     });
   }
 
